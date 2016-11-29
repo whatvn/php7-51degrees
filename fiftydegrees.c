@@ -75,7 +75,7 @@ static void fiftydegrees_obj_free(zend_object *object) {
     efree(ffdegrees);
 }
 
-static inline zend_object* fiftydegreesMath_obj_new(zend_class_entry *ce) {
+static inline zend_object* fiftydegreesMatch_obj_new(zend_class_entry *ce) {
     ffdegreess_workset_t* ffdegrees_workset;
     ffdegrees_workset = ecalloc(1, sizeof (ffdegreess_workset_t) + zend_object_properties_size(ce));
     zend_object_std_init(&ffdegrees_workset->std, ce);
@@ -233,7 +233,7 @@ PHP_MINIT_FUNCTION(fiftydegrees) {
 
     INIT_CLASS_ENTRY(ce, "fiftydegreesMatch", fiftydegreesMatch_methods);
     fiftydegrees_workset_ce = zend_register_internal_class(&ce);
-    fiftydegrees_workset_ce->create_object = fiftydegreesMath_obj_new;
+    fiftydegrees_workset_ce->create_object = fiftydegreesMatch_obj_new;
     zend_declare_property_long(fiftydegrees_workset_ce, ZEND_STRL("fd"), 0, ZEND_ACC_PUBLIC TSRMLS_CC);
     memcpy(&fiftydegreesMatch_obj_handlers, zend_get_std_object_handlers(), sizeof (fiftydegreesMatch_obj_handlers));
     fiftydegreesMatch_obj_handlers.offset = XtOffsetOf(ffdegreess_workset_t, std);
@@ -241,6 +241,13 @@ PHP_MINIT_FUNCTION(fiftydegrees) {
 
     return SUCCESS;
 
+}
+
+PHP_RINIT_FUNCTION(fiftydegrees) {
+#if defined(COMPILE_DL_FIFTYDEGREES) && defined(ZTS)
+    ZEND_TSRMLS_CACHE_UPDATE();
+#endif
+    return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(fiftydegrees) {

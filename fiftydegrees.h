@@ -15,30 +15,16 @@
 #endif
 #pragma once 
 
+//
+//#ifdef ZTS
+//#define FIFTYDEGREE_G(v) ZEND_TSRMG(fiftydegrees_globals_id, zend_fiftydegrees_globals *, v)
+//#ifdef COMPILE_DL_FIFTYDEGREES
+//ZEND_TSRMLS_CACHE_EXTERN()
+//#endif
+//#else
+//#define FIFTYDEGREE_G(v) (fiftydegrees_globals.v)
+//#endif
 
-ZEND_BEGIN_MODULE_GLOBALS(fiftydegrees_globals)
-    char* data_dir;
-    char* property_list;
-    long cache_size;
-    long pool_size;
-ZEND_END_MODULE_GLOBALS(fiftydegrees_globals)
-
-#ifdef ZTS
-#define FIFTYDEGREE_G(v) ZEND_TSRMG(fiftydegrees_globals_id, zend_fiftydegrees_globals *, v)
-#ifdef COMPILE_DL_FIFTYDEGREES
-ZEND_TSRMLS_CACHE_EXTERN()
-#endif
-#else
-#define FIFTYDEGREE_G(v) (fiftydegrees_globals.v)
-#endif
-
-
-PHP_RINIT_FUNCTION(fiftydegrees) {
-#if defined(COMPILE_DL_FIFTYDEGREES) && defined(ZTS)
-    ZEND_TSRMLS_CACHE_UPDATE();
-#endif
-    return SUCCESS;
-}
 
 typedef struct {
     fiftyoneDegreesProvider provider;
@@ -56,9 +42,6 @@ typedef struct {
 extern zend_module_entry fiftydegrees_module_entry;
 #define phpext_fiftydegrees_ptr &fiftydegrees_module_entry;
 
-typedef struct {
-    fiftyoneDegreesProvider *provider;
-} _cprovider;
 
 #if defined(ZTS) && defined(COMPILE_DL_FIFTYDEGREES)
 ZEND_TSRMLS_CACHE_EXTERN();
