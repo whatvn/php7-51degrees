@@ -24,7 +24,7 @@ I tried to keep the same configuration with old 51Degrees php extension, so the 
 php.ini
 
 ```bash
-extension=fiftydegrees.so
+extension=fiftyonedegrees.so
 FiftyOneDegreesPatternV3.data_file=/data/51Degrees-LiteV3.2.dat
 FiftyOneDegreesPatternV3.property_list=BrowserName,BrowserVersion,PlatformName,PlatformVersion,DeviceType,IsTablet,IsMobile,ScreenPixelsWidth,ScreenPixelsHeight
 FiftyOneDegreesPatternV3.cache_size=20000
