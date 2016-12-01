@@ -1,18 +1,17 @@
 # php7-51degrees
 
 The origin php extension provided by 51Degrees foundation was built on top of swig, which is currently does not support PHP7.
-This extension is experimental version, written as raw php-extension, because php-cpp has memory leak problem 
+This extension is experimental version, written as raw php-extension, because my last extension built with php-cpp has memory leak problem 
 
 
 # BUILD
-
-
 
 
 ```
 phpize
 ./configure
 make
+make test
 make install 
 ```
 
@@ -24,7 +23,7 @@ I tried to keep the same configuration with old 51Degrees php extension, so the 
 
 php.ini
 
-```
+```bash
 extension=fiftydegrees.so
 FiftyOneDegreesPatternV3.data_file=/data/51Degrees-LiteV3.2.dat
 FiftyOneDegreesPatternV3.property_list=BrowserName,BrowserVersion,PlatformName,PlatformVersion,DeviceType,IsTablet,IsMobile,ScreenPixelsWidth,ScreenPixelsHeight
@@ -35,21 +34,37 @@ FiftyOneDegreesPatternV3.pool_size=25
 
 # Usage
 
-here is example: 
+**Remember*: include  DeviceDetection.class.php in your php file
+ as in example: 
 
 
-```php}
+```php
+
 <?php
-
+require('DeviceDetection.class.php');
 $time_begin = microtime(true);
-$my = new fiftydegrees();
-
-
-for ($i = 0; $i < 1000000; $i++) {
-        $m = $my->get_match("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36");
-        $m->get_value("PlatformName");
+echo "round 1\n";
+$d1 = DeviceDetection::getDeviceInfo("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36");
+for ($i = 0; $i < 1000; $i++) {
+	echo $d1->getPlatformName();;
+	echo "\n";
+	echo $d1->getDeviceType();;
+	echo "\n";
 }
-echo microtime(true) - $time_begin;
+
+echo "round 2\n";
+
+$d2 = DeviceDetection::getDeviceInfo("HTC_HD2_T8585 Opera/9.70 (Windows NT 5.1; U; de)");
+for ($i = 0; $i < 1000; $i++) {
+        echo $d2->getPlatformName();;
+        echo "\n";
+        echo $d2->getDeviceType();;
+	echo "\n";
+}
+$time_end = microtime(true);
+//echo $time_end - $time_begin;
+echo microtime(true) -  $time_begin;
+echo "\n";
 
 ``` 
 
