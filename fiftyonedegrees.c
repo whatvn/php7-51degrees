@@ -84,7 +84,6 @@ static inline zend_object* fiftyonedegreesMatch_obj_new(zend_class_entry *ce) {
 }
 
 static void fiftyonedegreesMatch_obj_free(zend_object *object TSRMLS_CC) {
-    printf("Destructing...\n");
     fiftyone_degrees_workset_t* ffdegrees_workset;
     ffdegrees_workset = fiftyonedegrees_workset_obj_fetch(object);
     if (!ffdegrees_workset) {
