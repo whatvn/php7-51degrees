@@ -19,6 +19,9 @@ static zend_object_handlers fiftyonedegrees_obj_handlers;
 static zend_object_handlers fiftyonedegreesMatch_obj_handlers;
 static zend_class_entry *fiftyonedegrees_ce;
 static zend_class_entry *fiftyonedegrees_workset_ce;
+ZEND_DECLARE_MODULE_GLOBALS(fiftyonedegrees);
+
+fiftyoneDegreesProvider provider;
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY("FiftyOneDegreesPatternV3.data_file", "/data/51Degrees-LiteV3.2.dat",
@@ -39,11 +42,15 @@ static inline fiftyone_degrees_workset_t* fiftyonedegrees_workset_obj_fetch(zend
     return (fiftyone_degrees_workset_t*) ((char*) (obj) - XtOffsetOf(fiftyone_degrees_workset_t, std));
 }
 
-#define Z_FIFTYDEGREES_P(zv) fiftyonedegrees_obj_fetch(Z_OBJ_P((zv)))
-#define Z_FIFTYDEGREES_WORKSET_P(zv) fiftyonedegrees_workset_obj_fetch(Z_OBJ_P((zv)))
-#define CALL_METHOD_BASE(classname, name) zim_##classname##_##name
-#define CALL_METHOD(classname, name, retval)                  \
-  CALL_METHOD_BASE(classname, name)(NULL, retval);
+#define Z_FIFTYONEDEGREES_P(zv) fiftyonedegrees_obj_fetch(Z_OBJ_P((zv)))
+#define Z_FIFTYONEDEGREES_WORKSET_P(zv) fiftyonedegrees_workset_obj_fetch(Z_OBJ_P((zv)))
+
+#ifdef ZTS
+#include "TSRM.h"
+#define FIFTYONEDEGREES_G(v) TSRMG(fiftyonedegrees_globals_id, zend_fiftyonedegrees_globals*, v)
+#else
+#define FIFTYONEDEGREES_G(v) (fiftyonedegrees_globals.v)
+#endif
 
 static inline zend_object* fiftyonedegrees_obj_new(zend_class_entry *ce) {
     fiftyone_degrees_t* ffdegrees;
@@ -60,18 +67,9 @@ static void fiftyonedegrees_obj_free(zend_object *object) {
     if (!ffdegrees) {
         return;
     }
-    /*
-    if (&ffdegrees->provider != NULL) {
-        if (ffdegrees->provider.activePool != NULL) {
-            //            fiftyoneDegreesWorksetPoolCacheDataSetFree((fiftyoneDegreesWorksetPool*) ffdegrees->provider.activePool);
-            //            fiftyoneDegreesProviderFree(&ffdegrees->provider);
-        }
-    }
-    */ 
     if (!Z_ISNULL(ffdegrees->provider_obj_zval)) {
         zval_ptr_dtor(&ffdegrees->provider_obj_zval);
     }
-
     zend_object_std_dtor(&ffdegrees->std);
     efree(ffdegrees);
 }
@@ -85,31 +83,25 @@ static inline zend_object* fiftyonedegreesMatch_obj_new(zend_class_entry *ce) {
     return &ffdegrees_workset->std;
 }
 
-static void fiftyonedegreesMatch_obj_free(zend_object *object) {
+static void fiftyonedegreesMatch_obj_free(zend_object *object TSRMLS_CC) {
+    printf("Destructing...\n");
     fiftyone_degrees_workset_t* ffdegrees_workset;
     ffdegrees_workset = fiftyonedegrees_workset_obj_fetch(object);
     if (!ffdegrees_workset) {
         return;
     }
-    /*
-    if (ffdegrees_workset->workset) {
-        fiftyoneDegreesWorksetRelease(ffdegrees_workset->workset);
-        fiftyoneDegreesWorksetRelease(ffdegrees_workset->workset);
-        //        ffdegrees_workset->workset = NULL;
+    if (ffdegrees_workset->user_agent) {
+        free(ffdegrees_workset->user_agent);
+        ffdegrees_workset->user_agent = NULL;
     }
 
-    if (ffdegrees_workset->user_agent) {
-        efree(ffdegrees_workset->user_agent);
+    if (!Z_ISNULL(ffdegrees_workset->workset_obj_zval)) {
+        zval_ptr_dtor(&ffdegrees_workset->workset_obj_zval);
     }
-    if (!Z_ISNULL(ffdegrees_workset->provider_obj_zval)) {
-        zval_ptr_dtor(&ffdegrees_workset->provider_obj_zval);
-    }
-     */
     zend_object_std_dtor(&ffdegrees_workset->std);
     efree(ffdegrees_workset);
 }
 
-fiftyoneDegreesProvider provider;
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_fiftyonedegrees_none, 0, 0, 0)
 ZEND_END_ARG_INFO()
@@ -135,47 +127,25 @@ PHP_MINFO_FUNCTION(fiftyonedegrees) {
 }
 
 PHP_METHOD(fiftyonedegrees, __construct) {
-    fiftyone_degrees_t* ffdegrees;
-    return_value = getThis();
-    ffdegrees = Z_FIFTYDEGREES_P(return_value);
-    char* data_file = INI_STR("FiftyOneDegreesPatternV3.data_file");
-    char *properties = INI_STR("FiftyOneDegreesPatternV3.property_list");
-    int cacheSize = INI_INT("FiftyOneDegreesPatternV3.cache_size");
-    int poolSize = INI_INT("FiftyOneDegreesPatternV3.pool_size");
     if (zend_parse_parameters_none() == FAILURE) {
         RETURN_FALSE;
     }
-    if (provider.activePool == NULL) {
-        fiftyoneDegreesDataSetInitStatus status = fiftyoneDegreesInitProviderWithPropertyString(
-                data_file, &provider, properties, poolSize, cacheSize);
-        if (status != DATA_SET_INIT_STATUS_SUCCESS) {
-            RETURN_FALSE;
-        }
-    }
-    ffdegrees->provider = provider;
-    ZVAL_COPY(return_value, &ffdegrees->provider_obj_zval);
-    //    RETURN_TRUE;
+    fiftyone_degrees_t* ffdegrees;
+    ffdegrees = Z_FIFTYONEDEGREES_P(return_value);
 }
 
 PHP_METHOD(fiftyonedegrees, get_match) {
     strlen_t len = 0;
     char* user_agent;
-    fiftyone_degrees_t* ffdegrees;
     fiftyone_degrees_workset_t* ffdegrees_workset;
-    zval *object = getThis();
-    ffdegrees = Z_FIFTYDEGREES_P(object);
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &user_agent, &len) == FAILURE) {
         RETURN_FALSE;
     }
-    if (!&ffdegrees->provider) {
-        RETURN_FALSE;
-    }
     object_init_ex(return_value, fiftyonedegrees_workset_ce);
-    ffdegrees_workset = Z_FIFTYDEGREES_WORKSET_P(return_value);
+    ffdegrees_workset = Z_FIFTYONEDEGREES_WORKSET_P(return_value);
     ffdegrees_workset->user_agent = strdup(user_agent);
-    /*
-    ZVAL_COPY(&ffdegrees_workset->provider_obj_zval, object);
-    */ 
+    zend_update_property_string(fiftyonedegrees_workset_ce, return_value, "user_agent", strlen("user_agent"), user_agent TSRMLS_CC);
+    ZVAL_COPY(&ffdegrees_workset->workset_obj_zval, return_value);
 }
 
 PHP_METHOD(fiftyonedegreesMatch, get_value) {
@@ -184,27 +154,22 @@ PHP_METHOD(fiftyonedegreesMatch, get_value) {
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &property_name, &len) == FAILURE) {
         RETURN_FALSE;
     }
-    zval *object = getThis();
     fiftyone_degrees_workset_t* ffdegrees_workset;
-    ffdegrees_workset = Z_FIFTYDEGREES_WORKSET_P(object);
-    if (!provider.activePool) {
-        RETURN_FALSE;
-    }
-    fiftyoneDegreesWorkset* ws = fiftyoneDegreesProviderWorksetGet(&provider);
-    if (!ws) {
-        RETURN_FALSE;
-    }
+    ffdegrees_workset = Z_FIFTYONEDEGREES_WORKSET_P(getThis());
+    fiftyoneDegreesProvider* provider = FIFTYONEDEGREES_G(provider);
+    fiftyoneDegreesWorkset* ws = fiftyoneDegreesProviderWorksetGet(provider);
     fiftyoneDegreesMatch(ws, ffdegrees_workset->user_agent);
     int32_t requiredPropertyIndex = fiftyoneDegreesGetRequiredPropertyIndex(ws->dataSet, property_name);
     if (requiredPropertyIndex) {
         fiftyoneDegreesSetValues(ws, requiredPropertyIndex);
         const fiftyoneDegreesAsciiString* valueName = fiftyoneDegreesGetString(ws->dataSet, ws->values[0]->nameOffset);
         const char* value = &(valueName->firstByte);
-        fiftyoneDegreesWorksetRelease(ws);
         ZVAL_STRING(return_value, (char*) value);
-        return;
+        fiftyoneDegreesWorksetRelease(ws);
+        ws = NULL;
+    } else {
+        return NULL;
     }
-    RETURN_FALSE;
 }
 
 zend_function_entry fiftyonedegrees_methods[] = {
@@ -218,33 +183,77 @@ zend_function_entry fiftyonedegreesMatch_methods[] = {
     PHP_FE_END
 };
 
+fiftyoneDegreesProvider* provider_init() {
+    char* data_file = INI_STR("FiftyOneDegreesPatternV3.data_file");
+    char *properties = INI_STR("FiftyOneDegreesPatternV3.property_list");
+    int cacheSize = INI_INT("FiftyOneDegreesPatternV3.cache_size");
+    int poolSize = INI_INT("FiftyOneDegreesPatternV3.pool_size");
+    fiftyoneDegreesDataSetInitStatus status = fiftyoneDegreesInitProviderWithPropertyString(
+            data_file, &provider, properties, poolSize, cacheSize);
+    if (status != DATA_SET_INIT_STATUS_SUCCESS) {
+        php_error_docref(NULL, E_CORE_ERROR, "Cannot initialize database provider, error_code: %d", status);
+        return NULL;
+    }
+    return &provider;
+}
+
+static int fiftyonedegrees_init_globals(zend_fiftyonedegrees_globals *fiftyonedegrees_globals TSRMLS_CC) {
+    if (fiftyonedegrees_globals->initialised == 1) {
+        return SUCCESS;
+    }
+    fiftyonedegrees_globals->provider = provider_init();
+    if (fiftyonedegrees_globals->provider == NULL) {
+        php_error_docref(NULL, E_CORE_ERROR, "Cannot initialize database provider, provider is null");
+        return FAILURE;
+    }
+    fiftyonedegrees_globals->initialised = 1;
+    return SUCCESS;
+}
+
+static void fiftyonedegrees_destroy_globals(zend_fiftyonedegrees_globals *fiftyonedegrees_globals TSRMLS_CC) {
+    if (!fiftyonedegrees_globals) {
+        return;
+    }
+    fiftyonedegrees_globals->initialised = 0;
+    fiftyoneDegreesProviderFree(fiftyonedegrees_globals->provider);
+}
+
 PHP_MINIT_FUNCTION(fiftyonedegrees) {
 
     REGISTER_INI_ENTRIES();
 
-    zend_class_entry ce;
+#ifdef ZTS
+    ts_allocate_id(&fiftyonedegrees_globals_id,
+            sizeof (zend_fiftyonedegrees_globals),
+            (ts_allocate_ctor) fiftyonedegrees_init_globals,
+            (ts_allocate_dtor) NULL);
+    //            (ts_allocate_dtor) fiftyonedegrees_destroy_globals);
+#else
+    fiftyonedegrees_init_globals(&fiftyonedegrees_global TSRMLS_CC);
+#endif
 
+    zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "fiftyonedegrees", fiftyonedegrees_methods);
-    fiftyonedegrees_ce = zend_register_internal_class(&ce);
+    fiftyonedegrees_ce = zend_register_internal_class(&ce TSRMLS_CC);
     fiftyonedegrees_ce->create_object = fiftyonedegrees_obj_new;
-    zend_declare_property_long(fiftyonedegrees_ce, ZEND_STRL("fd"), 0, ZEND_ACC_PUBLIC TSRMLS_CC);
     memcpy(&fiftyonedegrees_obj_handlers, zend_get_std_object_handlers(), sizeof (fiftyonedegrees_obj_handlers));
     fiftyonedegrees_obj_handlers.offset = XtOffsetOf(fiftyone_degrees_t, std);
     fiftyonedegrees_obj_handlers.free_obj = fiftyonedegrees_obj_free;
 
     INIT_CLASS_ENTRY(ce, "fiftyonedegreesMatch", fiftyonedegreesMatch_methods);
-    fiftyonedegrees_workset_ce = zend_register_internal_class(&ce);
+    fiftyonedegrees_workset_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_declare_property_string(fiftyonedegrees_workset_ce, "user_agent", strlen("user_agent"), "", ZEND_ACC_PUBLIC TSRMLS_CC);
     fiftyonedegrees_workset_ce->create_object = fiftyonedegreesMatch_obj_new;
-    zend_declare_property_long(fiftyonedegrees_workset_ce, ZEND_STRL("fd"), 0, ZEND_ACC_PUBLIC TSRMLS_CC);
     memcpy(&fiftyonedegreesMatch_obj_handlers, zend_get_std_object_handlers(), sizeof (fiftyonedegreesMatch_obj_handlers));
     fiftyonedegreesMatch_obj_handlers.offset = XtOffsetOf(fiftyone_degrees_workset_t, std);
-    fiftyonedegreesMatch_obj_handlers.free_obj = fiftyonedegreesMatch_obj_free;
+    fiftyonedegreesMatch_obj_handlers.dtor_obj = fiftyonedegreesMatch_obj_free;
+
     return SUCCESS;
 
 }
 
 PHP_RINIT_FUNCTION(fiftyonedegrees) {
-#if defined(COMPILE_DL_FIFTYDEGREES) && defined(ZTS)
+#if defined(COMPILE_DL_FIFTYONEDEGREES) && defined(ZTS)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
     return SUCCESS;
@@ -252,9 +261,9 @@ PHP_RINIT_FUNCTION(fiftyonedegrees) {
 
 PHP_MSHUTDOWN_FUNCTION(fiftyonedegrees) {
     UNREGISTER_INI_ENTRIES();
-    if (provider.activePool != NULL) {
-        fiftyoneDegreesProviderFree(&provider);
-    }
+#ifndef ZTS
+    fiftyonedegrees_destroy_globals(&fiftyonedegrees_globals TSRMLS_CC);
+#endif
     return SUCCESS;
 }
 
