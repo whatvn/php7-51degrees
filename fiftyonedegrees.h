@@ -14,27 +14,22 @@
 #endif
 #pragma once 
 
-
 typedef struct {
-//    fiftyoneDegreesProvider provider;
-    zval provider_obj_zval;
+    char* user_agent;
     zend_object std;
 } fiftyone_degrees_t;
 
-typedef struct {
-    char* user_agent;
-//    fiftyoneDegreesProvider* provider;
-//    fiftyoneDegreesWorkset *workset;
-    zval workset_obj_zval;
-    zend_object std;
-} fiftyone_degrees_workset_t;
+//typedef struct {
+//    zval workset_obj_zval;
+//    zend_object std;
+//} fiftyone_degrees_workset_t;
 
-ZEND_BEGIN_MODULE_GLOBALS (fiftyonedegrees) 
-    fiftyoneDegreesProvider* provider; 
-    int initialised;
-ZEND_END_MODULE_GLOBALS (fiftyonedegrees)
+ZEND_BEGIN_MODULE_GLOBALS(fiftyonedegrees)
+fiftyoneDegreesProvider* provider;
+int initialised;
+ZEND_END_MODULE_GLOBALS(fiftyonedegrees)
 
-extern ZEND_DECLARE_MODULE_GLOBALS (fiftyonedegrees);
+extern ZEND_DECLARE_MODULE_GLOBALS(fiftyonedegrees);
 
 
 extern zend_module_entry fiftyonedegrees_module_entry;
