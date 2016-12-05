@@ -11,21 +11,14 @@ class DeviceDetection {
     private $browserName = "";
     private $browserVersion = "";
     
-    private static $provider_instance = null;
-
     // get device information
     static function getDeviceInfo($userAgent=null) {
         // if no user-Agent, get from request header
         if ($userAgent==null) {
             $userAgent = $_SERVER['HTTP_USER_AGENT'];
         }
-        
-        // check if provider not created
-        if (self::$provider_instance==null) {
-            self::$provider_instance = new fiftyonedegrees(); 
-        }
-        $match = self::$provider_instance->get_match($userAgent);
-
+        $instance = new fiftyonedegrees(); 
+        $match = $instance->get_match($userAgent);
         // create new object
         $obj = new DeviceDetection();
         $obj->userAgent = $userAgent;
@@ -112,10 +105,5 @@ class DeviceDetection {
     function getBrowserVersion() {
         return $this->browserVersion;
     }
-
-    static function getProviderInstance() {
-        return self::$provider_instance;
-    }
-    
 }
 ?>
