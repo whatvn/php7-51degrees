@@ -19,11 +19,6 @@ typedef struct {
     zend_object std;
 } fiftyone_degrees_t;
 
-//typedef struct {
-//    zval workset_obj_zval;
-//    zend_object std;
-//} fiftyone_degrees_workset_t;
-
 ZEND_BEGIN_MODULE_GLOBALS(fiftyonedegrees)
 fiftyoneDegreesProvider* provider;
 int initialised;

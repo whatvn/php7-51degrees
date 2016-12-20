@@ -166,11 +166,11 @@ PHP_METHOD(fiftyonedegrees, get_value) {
         fiftyoneDegreesSetValues(ws, requiredPropertyIndex);
         const fiftyoneDegreesAsciiString* valueName = fiftyoneDegreesGetString(ws->dataSet, ws->values[0]->nameOffset);
         const char* value = &(valueName->firstByte);
-        fiftyoneDegreesWorksetRelease(ws);
         ZVAL_STRING(return_value, (char*) value);
     } else {
-        return NULL;
+        ZVAL_STRING(return_value, "");
     }
+    fiftyoneDegreesWorksetRelease(ws);
 }
 
 zend_function_entry fiftyonedegrees_methods[] = {
