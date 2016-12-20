@@ -18,9 +18,6 @@
 static zend_object_handlers fiftyonedegrees_obj_handlers;
 static zend_object_handlers fiftyonedegreesMatch_obj_handlers;
 static zend_class_entry *fiftyonedegrees_ce;
-/*
-static zend_class_entry *fiftyonedegrees_workset_ce;
-*/ 
 ZEND_DECLARE_MODULE_GLOBALS(fiftyonedegrees);
 
 fiftyoneDegreesProvider provider;
@@ -40,13 +37,6 @@ static inline fiftyone_degrees_t* fiftyonedegrees_obj_fetch(zend_object* obj) {
     return (fiftyone_degrees_t*) ((char*) (obj) - XtOffsetOf(fiftyone_degrees_t, std));
 }
 #define Z_FIFTYONEDEGREES_P(zv) fiftyonedegrees_obj_fetch(Z_OBJ_P((zv)))
-
-/*
-static inline fiftyone_degrees_workset_t* fiftyonedegrees_workset_obj_fetch(zend_object* obj) {
-    return (fiftyone_degrees_workset_t*) ((char*) (obj) - XtOffsetOf(fiftyone_degrees_workset_t, std));
-}
-#define Z_FIFTYONEDEGREES_WORKSET_P(zv) fiftyonedegrees_workset_obj_fetch(Z_OBJ_P((zv)))
-*/
 
 #ifdef ZTS
 #include "TSRM.h"
@@ -140,7 +130,15 @@ PHP_METHOD(fiftyonedegrees, __construct) {
     ffdegrees->user_agent = NULL;
 }
 
-PHP_FUNCTION(get_match) {
+// static method $m = fiftyonedegrees::getMatch()
+PHP_METHOD(fiftyonedegrees, getMatch) {
+    object_init_ex(return_value, fiftyonedegrees_ce);
+    fiftyone_degrees_t* ffdegrees;
+    ffdegrees = Z_FIFTYONEDEGREES_P(return_value);
+    ffdegrees->user_agent = NULL;
+}
+
+PHP_FUNCTION(setUserAgent) {
     zval* zobj;
     strlen_t len = 0;
     char* user_agent;
@@ -177,7 +175,8 @@ PHP_METHOD(fiftyonedegrees, get_value) {
 
 zend_function_entry fiftyonedegrees_methods[] = {
     PHP_ME(fiftyonedegrees, __construct, arginfo_fiftyonedegrees_none, ZEND_ACC_CTOR | ZEND_ACC_PUBLIC)
-    PHP_ME_MAPPING(get_match, get_match, arginfo_fiftyonedegrees_get_match, ZEND_ACC_PUBLIC)
+    PHP_ME(fiftyonedegrees, getMatch, arginfo_fiftyonedegrees_none, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
+    PHP_ME_MAPPING(setUserAgent, setUserAgent, arginfo_fiftyonedegrees_get_match, ZEND_ACC_PUBLIC)
     PHP_ME(fiftyonedegrees, get_value, arginfo_fiftyonedegrees_get_value, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
