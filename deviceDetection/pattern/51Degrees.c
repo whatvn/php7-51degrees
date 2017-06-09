@@ -8,6 +8,7 @@
 #include <assert.h>
 #include "../cityhash/city.h"
 #include "51Degrees.h"
+#include "php.h"
 /* *********************************************************************
  * This Source Code Form is copyright of 51Degrees Mobile Experts Limited.
  * Copyright 2015 51Degrees Mobile Experts Limited, 5 Charlotte Close,

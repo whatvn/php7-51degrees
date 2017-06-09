@@ -121,7 +121,7 @@ PHP_MINFO_FUNCTION(fiftyonedegrees) {
 }
 
 PHP_METHOD(fiftyonedegrees, __construct) {
-    if (zend_parse_parameters_none() == FAILURE) {
+    if (zend_parse_parameters_none() TSRMLS_CC == FAILURE) {
         RETURN_FALSE;
     }
     return_value = getThis();
@@ -143,7 +143,7 @@ PHP_FUNCTION(setUserAgent) {
     strlen_t len = 0;
     char* user_agent;
     fiftyone_degrees_t* ffdegrees;
-    if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O|sl", &zobj, fiftyonedegrees_ce, &user_agent, &len) == FAILURE) {
+    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O|sl", &zobj, fiftyonedegrees_ce, &user_agent, &len) == FAILURE) {
         RETURN_FALSE;
     }
     ffdegrees = Z_FIFTYONEDEGREES_P(zobj);
@@ -151,11 +151,11 @@ PHP_FUNCTION(setUserAgent) {
     RETURN_TRUE;
 }
 
-PHP_METHOD(fiftyonedegrees, get_value) {
+PHP_METHOD(fiftyonedegrees, getValue) {
     fiftyone_degrees_t* ffdegrees;
     strlen_t len = 0;
     char* property_name = NULL;
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &property_name, &len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &property_name, &len) == FAILURE) {
         RETURN_FALSE;
     }
     ffdegrees = Z_FIFTYONEDEGREES_P(getThis());
@@ -177,11 +177,11 @@ zend_function_entry fiftyonedegrees_methods[] = {
     PHP_ME(fiftyonedegrees, __construct, arginfo_fiftyonedegrees_none, ZEND_ACC_CTOR | ZEND_ACC_PUBLIC)
     PHP_ME(fiftyonedegrees, getMatch, arginfo_fiftyonedegrees_none, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     PHP_ME_MAPPING(setUserAgent, setUserAgent, arginfo_fiftyonedegrees_get_match, ZEND_ACC_PUBLIC)
-    PHP_ME(fiftyonedegrees, get_value, arginfo_fiftyonedegrees_get_value, ZEND_ACC_PUBLIC)
+    PHP_ME(fiftyonedegrees, getValue, arginfo_fiftyonedegrees_get_value, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
-fiftyoneDegreesProvider* provider_init() {
+static inline fiftyoneDegreesProvider* provider_init() {
     char* data_file = INI_STR("FiftyOneDegreesPatternV3.data_file");
     char *properties = INI_STR("FiftyOneDegreesPatternV3.property_list");
     int cacheSize = INI_INT("FiftyOneDegreesPatternV3.cache_size");
@@ -195,7 +195,7 @@ fiftyoneDegreesProvider* provider_init() {
     return &provider;
 }
 
-static int fiftyonedegrees_init_globals(zend_fiftyonedegrees_globals * fiftyonedegrees_globals TSRMLS_CC) {
+static inline int fiftyonedegrees_init_globals(zend_fiftyonedegrees_globals * fiftyonedegrees_globals TSRMLS_CC) {
     if (fiftyonedegrees_globals->initialised == 1) {
         return SUCCESS;
     }

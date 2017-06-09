@@ -6,7 +6,7 @@
 #define FIFTYONEDEGREES_H
 
 #define FIFTYONEDEGREES_VERSION "0.1"
-#define FIFTYONEDEGREESDB_VERSION "v3.2"
+#define FIFTYONEDEGREESDB_VERSION "3.2"
 #include "deviceDetection/pattern/51Degrees.h"
 
 #ifdef ZTS
