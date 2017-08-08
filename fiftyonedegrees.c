@@ -227,7 +227,7 @@ PHP_MINIT_FUNCTION(fiftyonedegrees) {
             (ts_allocate_dtor) NULL);
     //            (ts_allocate_dtor) fiftyonedegrees_destroy_globals);
 #else
-    fiftyonedegrees_init_globals(&fiftyonedegrees_global TSRMLS_CC);
+    fiftyonedegrees_init_globals(&fiftyonedegrees_globals TSRMLS_CC);
 #endif
 
     zend_class_entry ce;
