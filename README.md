@@ -1,3 +1,10 @@
+# NOTE: 
+
+The original php extension for **51Degrees** is now supported PHP7, please use that extension instead to have support directly from 51Degrees's people. ( [51Degrees](https://github.com/51Degrees/Device-Detection) ). 
+
+
+
+
 # php7-51degrees
 
 The origin php extension provided by 51Degrees foundation was built on top of swig, which is currently does not support PHP7.
